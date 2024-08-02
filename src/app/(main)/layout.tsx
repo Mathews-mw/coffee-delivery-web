@@ -1,6 +1,7 @@
-import { Footer } from '@/components/footer';
-import { Header } from '@/components/header/header';
 import { ReactNode } from 'react';
+
+import { Footer } from '@/components/footer';
+import { Header } from '@/components/header';
 
 export default function MainLayout({ children }: { children: ReactNode }) {
 	return (

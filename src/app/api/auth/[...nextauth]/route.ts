@@ -63,7 +63,7 @@ const nextAuthOptions: NextAuthOptions = {
 		},
 		async session({ session, token, newSession, user, trigger }) {
 			session.user.id = token.id;
-			session.user.name = token.email;
+			session.user.name = token.name;
 			session.user.email = token.email;
 			session.user.role = token.role;
 			session.user.is_active = token.is_active;
