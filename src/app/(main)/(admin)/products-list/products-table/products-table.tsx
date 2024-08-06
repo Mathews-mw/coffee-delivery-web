@@ -8,7 +8,7 @@ interface IProductsResponse {
 }
 
 async function fetchProductsList(): Promise<IProductsResponse> {
-	const response = await fetchApi('/products', {
+	const response = await fetchApi('/products?per_page=99', {
 		next: {
 			tags: ['products'],
 		},
@@ -21,6 +21,8 @@ async function fetchProductsList(): Promise<IProductsResponse> {
 
 export async function ProductsTable() {
 	const productsResponse = await fetchProductsList();
+
+	console.log('productsResponse: ', productsResponse);
 
 	return (
 		<div className="rounded border">

@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
+	eslint: {
 		ignoreDuringBuilds: true,
 	},
 	typescript: {
@@ -16,6 +16,10 @@ const nextConfig = {
 			{
 				protocol: 'https',
 				hostname: 'img.freepik.com',
+			},
+			{
+				protocol: 'https',
+				hostname: 'onedrive.live.com',
 			},
 		],
 	},

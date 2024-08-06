@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { AccountMenu } from './account-menu';
 import { Logo } from './logo';
 import { Navigation } from './navigation';
@@ -7,7 +8,9 @@ import { MapPin } from 'lucide-react';
 export function Header() {
 	return (
 		<header className="flex w-full justify-between p-8">
-			<Logo />
+			<Link href="/">
+				<Logo />
+			</Link>
 
 			<div className="flex gap-4">
 				<div className="flex items-center justify-center gap-2 rounded-md bg-violet-100 p-2 text-violet-500">

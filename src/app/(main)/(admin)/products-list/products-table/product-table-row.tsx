@@ -1,9 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { EditProductModal } from './edit-product-modal';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { EllipsisVertical } from 'lucide-react';
-import Image from 'next/image';
+import { ProductDetailsModal } from './product-details-modal';
 
 interface IProductTableRowProps {
 	product: IProductDetails;
@@ -14,8 +14,8 @@ export function ProductTableRow({ product }: IProductTableRowProps) {
 
 	return (
 		<TableRow>
-			<TableCell>
-				<Image src="/capuccino.png" width={42} height={42} alt="imagem do produto" />
+			<TableCell align="center">
+				<img src={product.image_url} width={42} height={42} alt="imagem do produto" />
 			</TableCell>
 			<TableCell className="font-mono text-xs font-medium">{product.id}</TableCell>
 			<TableCell>{product.name}</TableCell>
@@ -27,9 +27,10 @@ export function ProductTableRow({ product }: IProductTableRowProps) {
 			</TableCell>
 			<TableCell className="text-center">{isProductAvailable}</TableCell>
 			<TableCell>
-				<Button size="sm" variant="ghost">
-					<EllipsisVertical className="h-4 w-4" />
-				</Button>
+				<div className="flex items-center justify-center gap-2">
+					<ProductDetailsModal product={product} />
+					<EditProductModal product={product} />
+				</div>
 			</TableCell>
 		</TableRow>
 	);

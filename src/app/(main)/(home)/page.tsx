@@ -1,13 +1,16 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useQuery } from '@tanstack/react-query';
 import { CoffeeCard } from './coffee-card';
 import { HeroSection } from './hero-section';
+import { listingProducts } from '@/data/requests/listing-products';
 
 export default function HomePage() {
-	const { data } = useSession();
+	const { data: productsResponse } = useQuery({
+		queryKey: ['products'],
+		queryFn: listingProducts,
+	});
 
-	console.log('data: ', data);
 	return (
 		<div>
 			<HeroSection />
@@ -16,20 +19,10 @@ export default function HomePage() {
 				<h2 className="text-2xl font-bold text-baseTitle">Nossos Cafés</h2>
 
 				<div className="grid grid-cols-4 gap-x-8 gap-y-12">
-					<CoffeeCard />
-					<CoffeeCard />
-					<CoffeeCard />
-					<CoffeeCard />
-					<CoffeeCard />
-					<CoffeeCard />
-					<CoffeeCard />
-					<CoffeeCard />
-					<CoffeeCard />
-					<CoffeeCard />
-					<CoffeeCard />
-					<CoffeeCard />
-					<CoffeeCard />
-					<CoffeeCard />
+					{productsResponse &&
+						productsResponse.products.map((product) => {
+							return <CoffeeCard key={product.id} product={product} />;
+						})}
 				</div>
 			</div>
 		</div>

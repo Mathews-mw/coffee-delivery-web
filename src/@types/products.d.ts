@@ -10,5 +10,5 @@ interface IProduct {
 }
 
 interface IProductDetails extends IProduct {  
-  tags: ITagDetails[]
+  tags: IProductTagDetails[]
 }

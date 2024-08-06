@@ -20,41 +20,57 @@ import { errorHandler } from '@/utils/error-handler';
 import { MultiSelect } from '@/components/multi-select';
 import { listingTags } from '@/data/requests/listing-tags';
 import { CurrencyInput } from '@/components/currency-input';
+import { editProductRequest } from '@/data/requests/edit-product';
 import { SubmitFormButton } from '@/components/submit-form-button';
 import { revalidateFetchData } from '@/data/revalidate-fetch-data';
-import { createProductRequest } from '@/data/requests/create-product';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { convertImageFileToBase64 } from '@/utils/convert-image-file-to-base64';
 import {
 	Dialog,
 	DialogClose,
 	DialogContent,
-	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog';
 
-import { Plus } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 
-const createProductFormSchema = z.object({
+interface IEditProductModalProps {
+	product: IProductDetails;
+}
+
+const editProductFormSchema = z.object({
 	name: z.string(),
 	price: z.string(),
 	description: z.string(),
+	available: z.string(),
 	tagsId: z.array(z.string()),
 });
 
-type CreateProductInputData = z.infer<typeof createProductFormSchema>;
+type EditProductInputData = z.infer<typeof editProductFormSchema>;
 
-export function CreateProductModal() {
+export function EditProductModal({ product }: IEditProductModalProps) {
+	console.log('product: ', product);
 	const {
 		control,
 		handleSubmit,
 		reset,
 		register,
 		formState: { errors, isSubmitting },
-	} = useForm<CreateProductInputData>({
-		resolver: zodResolver(createProductFormSchema),
+	} = useForm<EditProductInputData>({
+		resolver: zodResolver(editProductFormSchema),
+		defaultValues: {
+			name: product.name,
+			price: product.price.toLocaleString('pt-BR', {
+				style: 'currency',
+				currency: 'BRL',
+			}),
+			description: product.description,
+			available: product.available ? 'true' : 'false',
+			tagsId: product.tags.map((tag) => tag.tag_id),
+		},
 	});
 
 	const [isOpen, setIsOpen] = useState(false);
@@ -81,8 +97,8 @@ export function CreateProductModal() {
 		enabled: isOpen,
 	});
 
-	const { mutateAsync: createProductRequestFn, isPending } = useMutation({
-		mutationFn: createProductRequest,
+	const { mutateAsync: editProductRequestFn, isPending } = useMutation({
+		mutationFn: editProductRequest,
 		async onSuccess() {
 			queryClient.invalidateQueries({ queryKey: ['products'] });
 			await revalidateFetchData('products');
@@ -96,7 +112,7 @@ export function CreateProductModal() {
 		}
 	}
 
-	async function handleCreateProductForm(data: CreateProductInputData) {
+	async function handleEditProductForm(data: EditProductInputData) {
 		const removeCurrencyFormat = (formattedValue: string): string => {
 			return formattedValue.replace(/[^\d,]/g, '').replace(',', '.');
 		};
@@ -106,35 +122,35 @@ export function CreateProductModal() {
 		};
 
 		try {
-			if (!attachments || attachments.length <= 0) {
-				setAttachmentErrorMessage(
-					'Você precisa incluir uma imagem do produto para cadastrá-lo'
-				);
-				return;
-			}
-
+			let attachmentId: string | undefined;
 			const formData = new FormData();
 
-			formData.append('file', attachments[0]);
+			if (attachments) {
+				formData.append('file', attachments[0]);
 
-			const { data: attachmentResponse } = await axiosApi.post<IAttachment>(
-				'/attachments/product-image',
-				formData,
-				{
-					headers: { 'content-type': 'multipart/form-data' },
-					onUploadProgress(progressEvent) {
-						const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total!);
-						setUploadProgress(progress);
-					},
-				}
-			);
+				const { data: attachmentResponse } = await axiosApi.post<IAttachment>(
+					'/attachments/product-image',
+					formData,
+					{
+						headers: { 'content-type': 'multipart/form-data' },
+						onUploadProgress(progressEvent) {
+							const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total!);
+							setUploadProgress(progress);
+						},
+					}
+				);
 
-			await createProductRequestFn({
+				attachmentId = attachmentResponse.id;
+			}
+
+			await editProductRequestFn({
+				productId: product.id,
 				name: data.name,
 				price: convertToFloat(data.price),
 				description: data.description,
+				available: data.available === 'true' ?? true,
 				tagsId: data.tagsId,
-				attachmentId: attachmentResponse.id,
+				attachmentId,
 			});
 
 			toast.success('Produto cadastrado com sucesso');
@@ -158,24 +174,19 @@ export function CreateProductModal() {
 
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
-			<DialogTrigger asChild>
-				<Button type="button" size="sm" variant="violet">
-					<Plus className="h-4 w-4" />
-					Novo produto
+			<DialogTrigger>
+				<Button size="sm" variant="outline">
+					<Pencil className="h-4 w-4" />
 				</Button>
 			</DialogTrigger>
 
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Cadastrar novo produto</DialogTitle>
-					<DialogDescription>
-						Insira as informações dos campos abaixo para cadastrar um novo produto. É necessário
-						incluir uma foto do produto
-					</DialogDescription>
+					<DialogTitle>Editar produto produto</DialogTitle>
 
 					<form
 						id="createProductForm"
-						onSubmit={handleSubmit(handleCreateProductForm)}
+						onSubmit={handleSubmit(handleEditProductForm)}
 						className="space-y-2.5"
 					>
 						<div>
@@ -198,6 +209,10 @@ export function CreateProductModal() {
 											placeholder="R$ 00,00"
 											value={field.value}
 											onValueChange={field.onChange}
+											defaultValue={product.price.toLocaleString('pt-BR', {
+												style: 'currency',
+												currency: 'BRL',
+											})}
 										/>
 									);
 								}}
@@ -237,6 +252,27 @@ export function CreateProductModal() {
 							{errors.tagsId && errors.tagsId.message && (
 								<ZodErrors error={[errors.tagsId.message]} />
 							)}
+						</div>
+
+						<div>
+							<Controller
+								control={control}
+								name="available"
+								render={({ field }) => {
+									return (
+										<RadioGroup onValueChange={field.onChange} defaultValue={field.value}>
+											<div className="flex items-center space-x-2">
+												<RadioGroupItem value="true" id="r1" />
+												<Label htmlFor="r1">Disponível</Label>
+											</div>
+											<div className="flex items-center space-x-2">
+												<RadioGroupItem value="false" id="r2" />
+												<Label htmlFor="r1">Indisponível</Label>
+											</div>
+										</RadioGroup>
+									);
+								}}
+							/>
 						</div>
 
 						<div className="space-y-2.5">
