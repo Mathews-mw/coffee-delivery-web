@@ -1,7 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
+'use client';
 
+import { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 
+import { useStore } from '@/zustand-store';
 import { Button } from '@/components/ui/button';
 
 import { Minus, Plus, ShoppingCart } from 'lucide-react';
@@ -11,7 +14,32 @@ interface ICoffeeCardProps {
 }
 
 export function CoffeeCard({ product }: ICoffeeCardProps) {
-	const priceFormatted = product.price.toString().replace('.', ',');
+	const [productsAmount, setProductsAmount] = useState(0);
+
+	const { addToOrder } = useStore((store) => {
+		return {
+			order: store.order,
+			addToOrder: store.addToOrder,
+		};
+	});
+
+	function handleAddProduct() {
+		setProductsAmount((prevState) => (prevState += 1));
+	}
+
+	function handleRemoveProduct() {
+		setProductsAmount((prevState) => {
+			if (prevState <= 0) {
+				return 0;
+			}
+
+			return (prevState -= 1);
+		});
+	}
+
+	function handleAddOrder() {
+		addToOrder({ product, quantity: productsAmount });
+	}
 
 	return (
 		<div
@@ -52,24 +80,39 @@ export function CoffeeCard({ product }: ICoffeeCardProps) {
 			<div className="flex w-full justify-between">
 				<div className="flex items-baseline gap-1">
 					<span className="text-sm">R$</span>
-					<strong className="text-2xl font-bold text-baseSubtitle">{priceFormatted}</strong>
+					<strong className="text-[24px] font-bold text-baseSubtitle">
+						{product.price.toString().replace('.', ',')}
+					</strong>
 				</div>
 
 				<div className="flex gap-1">
 					<div className="flex items-center justify-center rounded-lg bg-neutral-200">
-						<button className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg px-3 active:scale-[1.02] active:opacity-80">
-							<Minus className="h-5 w-5 text-violet-500" />
+						<button
+							onClick={handleRemoveProduct}
+							disabled={productsAmount <= 0}
+							className={twMerge([
+								'inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg px-2 active:scale-[1.02] active:opacity-80',
+								'disabled:opacity-40',
+							])}
+						>
+							<Minus className="h-4 w-4 text-violet-500" />
 						</button>
 
-						<span className="text-lg font-semibold">1</span>
+						<span className="font-mono text-lg font-semibold">{productsAmount}</span>
 
-						<button className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg px-3 active:scale-[1.02] active:opacity-80">
-							<Plus className="h-5 w-5 text-violet-500" />
+						<button
+							onClick={handleAddProduct}
+							className={twMerge([
+								'inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg px-2 active:scale-[1.02] active:opacity-80',
+								'disabled:opacity-40',
+							])}
+						>
+							<Plus className="h-4 w-4 text-violet-500" />
 						</button>
 					</div>
 
-					<Button size="sm" variant="violet">
-						<ShoppingCart className="h-5 w-5" />
+					<Button size="sm" variant="violet" onClick={handleAddOrder}>
+						<ShoppingCart className="h-4 w-4" />
 					</Button>
 				</div>
 			</div>
